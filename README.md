@@ -1,51 +1,105 @@
-# DPS Backend Coding Challenge
+## Database
 
-## Overview: Round-Robin Tournament Service
+There are 4 main tables:
 
-Your task is to build a backend service to manage round-robin sports tournaments. In a round-robin tournament, each participant must play against every other participant exactly once.
+`tournaments`
 
-Constraints and rules:
-- Each tournament can have up to 5 participants.
-- A game result gives:
-    - **2 points** for a win
-    - **1 point** for a draw
-    - **0 points** for a loss
-- A tournament is considered completed when everybody has played against everybody.
-- The service must be able to return a **leaderboard** for a given tournament, including its **status**.
+- `id`: tournament id
+- `name`: tournament name
+- `created_at`: creation time
 
-## Challenge Tasks
+`players`
 
--   **Fork this project:** You can either fork this repository or create a new one, using tech stack of your choice, and database, but your solution must be easy to run locally and clearly documented. 
-       1. If you're using this template, you can use ([db.service.ts](./src/services/db.service.ts)) to handle SQL queries to the database. 
-       2. Don't create PRs to this repository, provide a separate repo. 
--   **REST API Development:** Design and implement a RESTful APIs to create tournaments, create players and add them to the tournaments and to enter game results.
--   **Special API Endpoint:** Implement an endpoint that returns the status of a given tournament (in planning, started, finished) and the leaderboard (list of all participants of the tournament, their points up to date sorted descendingly).
--   **Submission:** After completing the challenge, email us the URL of your GitHub repository.
--   **Further information:**
-    -   If there is anything unclear regarding requirements, contact us by replying to our email.
-    -   Use small commits, we want to see your progress towards the solution.
-    -   Code clean and follow the best practices.
+- `id`: player id
+- `name`: player name
+- `created_at`: creation time
 
-## Environment Setup
+`tournament_players`
 
-If you are using suggested template. Ensure you have Node.js (v14.x or later) and npm (v6.x or later) installed. To set up and run the application, execute the following commands:
+- `id`: relation record id
+- `tournament_id`: related tournament id
+- `player_id`: related player id
+- `created_at`: when this player joined this tournament
+- unique constraint on (`tournament_id`, `player_id`) to avoid duplicate joins
 
-```
-npm install
-npm run dev
-```
+`matches`
 
-The application will then be accessible at http://localhost:3000.
+- `id`: match id
+- `tournament_id`: related tournament id
+- `player1_id`: first player
+- `player2_id`: second player
+- `winner_id`: winner player id; `null` means draw
+- `created_at`: match record creation time
+- unique constraint on (`tournament_id`, `player1_id`, `player2_id`) to avoid duplicate pair records
 
-## AI Usage Rules
+## API
 
-You are allowed to use AI tools to complete this task. However, **transparency is required**.
-Please include a small artifact folder or a markdown section with:
-- Links to ChatGPT / Claude / Copilot conversations
-- Any prompts used (copy/paste the prompt text if links are private)
-- Notes about what parts were AI-assisted
-- Any generated code snippets you modified or rejected
+Below is what is currently implemented.
 
-This helps us understand your workflow and decision-making process, not to judge AI usage.
+### Player APIs
 
-Happy coding!
+- `GET /players`
+    - Returns an array of players.
+- `GET /players/:id`
+    - Returns one player object; `404` if not found.
+- `POST /players`
+    - Body: `{ name: string }`
+    - Returns the created player object.
+- `PUT /players/:id`
+    - Body: `{ name: string }`
+    - Returns updated player object; `404` if not found.
+- `DELETE /players/:id`
+    - Returns `204` on success; `404` if not found.
+- `GET /players/:id/tournaments`
+    - Returns an array of tournaments joined by this player.
+- `GET /players/:id/matches`
+    - Returns an array of matches this player participated in.
+
+### Tournament APIs
+
+- `GET /tournaments`
+    - Returns an array of tournaments.
+- `GET /tournaments/:id`
+    - Returns one tournament object; `404` if not found.
+- `POST /tournaments`
+    - Body: `{ name: string }`
+    - Returns the created tournament object.
+- `PUT /tournaments/:id`
+    - Body: `{ name: string }`
+    - Returns updated tournament object; `404` if not found.
+- `DELETE /tournaments/:id`
+    - Returns a success message object; `404` if not found.
+- `GET /tournaments/:id/players`
+    - Returns an array of players in that tournament.
+- `POST /tournaments/:id/players`
+    - Body: `{ playersList: string[] }`
+    - Batch add players to the tournament.
+    - Returns an object with `added` list and (if partial) `failed` list.
+- `DELETE /tournaments/:id/players/:playerId`
+    - Removes one player from a tournament.
+    - Returns `204` on success; `404` if relation not found.
+- `GET /tournaments/:id/matches`
+    - Returns an array of matches in this tournament.
+
+### Match APIs
+
+- `POST /matches`
+    - Body: `{ tournamentId: string, player1Id: string, player2Id: string, winnerId: string | null }`
+    - Returns created match object.
+- `GET /matches/:id`
+    - Returns one match object; `404` if not found.
+- `PUT /matches/:id`
+    - Body: `{ player1Id: string, player2Id: string, winnerId: string | null }`
+    - Returns updated match object; `404` if not found.
+- `DELETE /matches/:id`
+    - Returns `204` on success; `404` if not found.
+
+### Leaderboard APIs
+
+Status here is simplified to two values: `started` and `finished`.
+
+- `GET /leaderboard/:id`
+    - Returns one leaderboard object for the given tournament id.
+    - The object contains tournament meta (`tournamentId`, `tournamentName`, `status`, `totalPlayers`, `totalMatches`, `playedMatches`) and `leaderboard` array.
+- `GET /leaderboard?name=<tournamentName>`
+    - Returns an array of leaderboard objects for all tournaments with that name.
