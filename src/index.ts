@@ -1,5 +1,6 @@
 import express, { Express } from 'express';
 import dotenv from 'dotenv';
+import leaderboardRouter from './routes/leaderboard';
 import matchRouter from './routes/match';
 import playerRouter from './routes/player';
 import tournamentRouter from './routes/tournament';
@@ -21,6 +22,7 @@ app.get('/health', (req, res) => {
 app.use('/players', playerRouter);
 app.use('/tournaments', tournamentRouter);
 app.use('/matches', matchRouter);
+app.use('/leaderboard', leaderboardRouter);
 
 app.listen(port, () => {
 	console.log(`[server]: Server is running at http://localhost:${port}`);
