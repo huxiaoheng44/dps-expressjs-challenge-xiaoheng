@@ -7,14 +7,14 @@ const db = new sqlite(path.resolve('./db/db.sqlite3'), {
 
 function query(
 	sql: string,
-	params?: { [key: string]: string | number | undefined },
+	params?: { [key: string]: string | number | null | undefined },
 ) {
 	return params ? db.prepare(sql).all(params) : db.prepare(sql).all();
 }
 
 function run(
 	sql: string,
-	params?: { [key: string]: string | number | undefined },
+	params?: { [key: string]: string | number | null | undefined },
 ) {
 	return params ? db.prepare(sql).run(params) : db.prepare(sql).run();
 }

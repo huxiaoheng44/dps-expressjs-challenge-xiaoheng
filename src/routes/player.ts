@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import matchService from '../services/match.service';
 import playerService from '../services/player.service';
 import tournamentPlayerService from '../services/tournament-player.service';
 
@@ -27,6 +28,16 @@ router.get('/:id/tournaments', (req, res) => {
 	res.status(200).json(
 		tournamentPlayerService.getTournamentsByPlayerId(req.params.id),
 	);
+});
+
+router.get('/:id/matches', (req, res) => {
+	const player = playerService.getPlayerById(req.params.id);
+	if (!player) {
+		res.status(404).json({ error: 'Player not found' });
+		return;
+	}
+
+	res.status(200).json(matchService.getMatchesByPlayerId(req.params.id));
 });
 
 // create a new player

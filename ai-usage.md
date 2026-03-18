@@ -237,3 +237,83 @@ export default {
 ```
 
 when copilot completing `routes/tournament.ts`, for deletion api, it did not consider to also delete record from table `tournament_players`, so I add a function `deleteByTournamentId()`to `tournament-player.service.ts` and then import it and used in this deletion api.
+
+
+### log 18/03/2026
+
+When implementing match.service.ts, the original version was created as follows: I provided the function names, and the implementation was completed by Copilot:
+
+```javascript
+import db from "./db.service";
+import { randomUUID } from "crypto";
+
+
+export type Match = {
+    id: string;
+    tournament_id: string;
+    player1_id: string;
+    player2_id: string;
+    winner_id: string | null;
+    created_at: string;
+};
+
+function createMatch(tournamentId: string, player1Id: string, player2Id: string): Match {
+    const id = randomUUID();
+    const createdAt = new Date().toISOString();
+    db.run(
+        'INSERT INTO matches (id, tournament_id, player1_id, player2_id, winner_id, created_at) VALUES (@id, @tournamentId, @player1Id, @player2Id, NULL, @created_at)',
+        {
+            id,
+            tournamentId,
+            player1Id,
+            player2Id,
+            created_at: createdAt,
+        },
+    );
+
+    const rows = db.query('SELECT * FROM matches WHERE id = @id', { id });
+    const match = rows[0] as Match | undefined;
+    if (!match) {
+        throw new Error('Failed to create match');
+    }
+
+    return match;
+}
+
+function updateMatch(matchId: string,player1Id: string, player2Id: string, winnerId: string | null): Match | undefined {
+    db.run(
+        'UPDATE matches SET player1_id = @player1Id, player2_id = @player2Id, winner_id = @winnerId WHERE id = @id',
+        {
+            id: matchId,
+            player1Id,
+            player2Id,
+            winnerId,
+        },
+    );
+    const rows = db.query('SELECT * FROM matches WHERE id = @id', { id: matchId });
+    return rows[0] as Match | undefined;
+}
+
+function deleteMatch(id: string): boolean {
+    const result = db.run('DELETE FROM matches WHERE id = @id', { id });
+    return result.changes > 0;
+}
+
+function getMatchesByTournamentId(tournamentId: string): Match[] {
+    return db.query('SELECT * FROM matches WHERE tournament_id = @tournamentId', { tournamentId }) as Match[];
+}
+
+function getMatchesByPlayerId(playerId: string): Match[] {
+    return db.query('SELECT * FROM matches WHERE player1_id = @playerId OR player2_id = @playerId', { playerId }) as Match[];
+}
+
+export default {
+    createMatch,
+    updateMatch,
+    deleteMatch,
+    getMatchesByTournamentId,
+    getMatchesByPlayerId,
+};
+```
+
+After the code review, I further added constraints to the matching logic based on the Round‑Robin rules.For example, two players can only play one match within a single tournament.In other words, match A‑B is equivalent to B‑A, so only one entry should exist in the table.Additionally, the value of winner_id must be either player1Id, player2Id, or null, and so on.
