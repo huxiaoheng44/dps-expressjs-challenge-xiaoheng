@@ -10,7 +10,7 @@ type TournamentPlayerRow = {
 
 type MatchRow = Pick<Match, 'player1_id' | 'player2_id' | 'winner_id'>;
 
-export type LeaderboardStatus = 'started' | 'finished';
+export type LeaderboardStatus = 'planning' | 'started' | 'finished';
 
 export type LeaderboardEntry = {
 	playerId: string;
@@ -106,9 +106,11 @@ function getTournamentLeaderboard(tournamentId: string): TournamentLeaderboard {
 	const playedMatches = matches.length;
 
 	const status: LeaderboardStatus =
-		totalMatches > 0 && playedMatches === totalMatches
-			? 'finished'
-			: 'started';
+		playedMatches === 0
+			? 'planning'
+			: playedMatches === totalMatches
+				? 'finished'
+				: 'started';
 
 	// sort by points desc, then wins desc, then playerId asc
 	const leaderboard = Array.from(stats.values()).sort((a, b) => {
