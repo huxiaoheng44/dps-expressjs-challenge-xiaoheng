@@ -108,10 +108,19 @@ function deleteByTournamentId(tournamentId: string): boolean {
 	return result.changes > 0;
 }
 
+function deleteByPlayerId(playerId: string): boolean {
+	const result = db.run(
+		'DELETE FROM tournament_players WHERE player_id = @playerId',
+		{ playerId },
+	);
+	return result.changes > 0;
+}
+
 export default {
 	getPlayersByTournamentId,
 	getTournamentsByPlayerId,
 	addPlayerToTournament,
 	removePlayerFromTournament,
 	deleteByTournamentId,
+	deleteByPlayerId,
 };

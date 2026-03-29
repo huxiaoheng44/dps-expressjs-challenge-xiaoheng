@@ -60,6 +60,8 @@ router.put('/:id', (req, res) => {
 
 // delete a player
 router.delete('/:id', (req, res) => {
+	matchService.deleteByPlayerId(req.params.id);
+	tournamentPlayerService.deleteByPlayerId(req.params.id);
 	const success = playerService.deletePlayer(req.params.id);
 	if (!success) {
 		res.status(404).json({ error: 'Player not found' });

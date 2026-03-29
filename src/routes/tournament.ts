@@ -114,6 +114,7 @@ router.delete('/:id/players/:playerId', (req, res) => {
 
 // delete a tournament
 router.delete('/:id', (req, res) => {
+	matchService.deleteByTournamentId(req.params.id);
 	tournamentPlayerService.deleteByTournamentId(req.params.id);
 	const success = tournamentService.deleteTournament(req.params.id);
 	if (!success) {

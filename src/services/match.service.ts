@@ -167,6 +167,24 @@ function deleteMatch(id: string): boolean {
 	return result.changes > 0;
 }
 
+function deleteByTournamentId(tournamentId: string): boolean {
+	const result = db.run(
+		'DELETE FROM matches WHERE tournament_id = @tournamentId',
+		{
+			tournamentId,
+		},
+	);
+	return result.changes > 0;
+}
+
+function deleteByPlayerId(playerId: string): boolean {
+	const result = db.run(
+		'DELETE FROM matches WHERE player1_id = @playerId OR player2_id = @playerId',
+		{ playerId },
+	);
+	return result.changes > 0;
+}
+
 function getMatchesByTournamentId(tournamentId: string): Match[] {
 	return db.query(
 		'SELECT id, tournament_id, player1_id, player2_id, winner_id, created_at FROM matches WHERE tournament_id = @tournamentId ORDER BY created_at ASC',
@@ -186,6 +204,8 @@ export default {
 	createMatch,
 	updateMatch,
 	deleteMatch,
+	deleteByTournamentId,
+	deleteByPlayerId,
 	getMatchesByTournamentId,
 	getMatchesByPlayerId,
 };
